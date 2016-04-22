@@ -1,0 +1,1 @@
+./montre -b "(p;q)%(3,4)" "./examples/my_sym_beh.txt"

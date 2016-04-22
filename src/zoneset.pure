@@ -1,0 +1,203 @@
+/* 
+Copyright (c) 2016 by Dogan Ulus <doganulus@gmail.com>.
+
+This file is part of the monitoring tool Montre.
+
+The Montre is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+using "lib:libmontre";
+using tre;
+
+namespace __C;
+extern zone_set* zs_create();
+extern void zs_destroy(zone_set*);
+extern void zs_append(zone_set*, int64, int64, int64, int64, int64, int64);
+extern void zs_append_not_anchored(zone_set*, int64, int64);
+extern void zs_append_begin_anchored(zone_set*, int64, int64);
+extern void zs_append_end_anchored(zone_set*, int64, int64);
+extern void zs_append_dual_anchored(zone_set*, int64, int64);
+extern void zs_append_point_zone(zone_set*, int64);
+extern void zs_append_endmarker_zone(zone_set*, int64);
+extern bool zs_includes(zone_set*, zone_set*);
+extern void zs_filter(zone_set*, zone_set*);
+extern void zs_restrict(zone_set*, zone_set*, int64, int64);
+extern void zs_intersect(zone_set*, zone_set*, zone_set*);
+extern void zs_concatenate(zone_set*, zone_set*, zone_set*);
+extern void zs_plus(zone_set*, zone_set*);
+extern void zs_union(zone_set*, zone_set*, zone_set*);
+extern int64  zs_size(zone_set*);
+extern int64  zs_total_duration(char*);
+extern void zs_print(zone_set*);
+
+// File IO
+extern void zs_from_file_na(zone_set*, char*, bool_expr*);
+extern void zs_from_file_ba(zone_set*, char*, bool_expr*);
+extern void zs_from_file_ea(zone_set*, char*, bool_expr*);
+extern void zs_from_file_da(zone_set*, char*, bool_expr*);
+
+extern void zs_fprintf_begin(void*, zone_set*, int64, int64);
+extern void zs_fprintf_end(void*, zone_set*, int64, int64);
+extern void zs_fprintf_zone(void*, zone_set*);
+
+namespace;
+
+type zs (zone_set p::pointer);
+nonfix nil;
+
+
+namespace zs;
+
+ptr (zone_set p::pointer) = p;
+
+create = (zone_set new_ptr)
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create
+	end;
+
+create_from_file_na filename::string bool_expr::pointer = (zone_set new_ptr)
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_from_file_na new_ptr filename bool_expr;
+	end;
+
+create_from_file_ba filename::string bool_expr::pointer = (zone_set new_ptr)
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_from_file_ba new_ptr filename bool_expr;
+	end;
+
+create_from_file_ea filename::string bool_expr::pointer = (zone_set new_ptr)
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_from_file_ea new_ptr filename bool_expr;
+	end;
+
+create_from_file_da filename::string bool_expr::pointer = (zone_set new_ptr) 
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_from_file_da new_ptr filename bool_expr;
+	end;
+
+append x bmin bmax emin emax dmin dmax = x
+	when
+		__C::zs_append (ptr x) bmin bmax emin emax dmin dmax
+	end;
+
+append_na x l r = x
+	when
+		__C::zs_append_not_anchored (ptr x) l r
+	end;
+
+append_ba x l r = x
+	when
+		__C::zs_append_begin_anchored (ptr x) l r
+	end;
+
+append_ea x l r = x
+	when
+		__C::zs_append_end_anchored (ptr x) l r
+	end;
+
+append_da x l r = x
+	when
+		__C::zs_append_dual_anchored (ptr x) l r
+	end;
+
+append_pz x p = x
+	when
+		__C::zs_append_point_zone (ptr x) p
+	end;
+
+append_endmarker x p = x
+	when
+		__C::zs_append_endmarker_zone (ptr x) p
+	end;
+
+print nil = puts "Empty Set";
+print x::zs = x when __C::zs_print (ptr x) end;
+
+filter nil = nil;
+filter x::zs = (zone_set new_ptr)
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_filter new_ptr (ptr x);
+	end;
+
+includes x nil = true;
+includes nil x = false;
+includes x::zs y::zs = __C::zs_includes new_ptr (ptr x) (ptr y);
+
+concatenate nil x = nil;
+concatenate x nil = nil;
+// concatenate eps x = x;
+// concatenate x eps = x;
+concatenate x::zs y::zs = if __C::zs_size new_ptr > 0 then (zone_set new_ptr) else nil
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_concatenate new_ptr (ptr x) (ptr y);
+	end;
+
+intersect nil x = nil;
+intersect x nil = nil;
+// intersect eps x = if ep x then eps else nil;
+// intersect x eps = if ep x then eps else nil;
+intersect x::zs y::zs = if __C::zs_size new_ptr > 0 then (zone_set new_ptr) else nil
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_intersect new_ptr (ptr x) (ptr y);
+	end;
+
+union nil x = x;
+union x nil = x;
+// union eps x = if ep x then x else (eps OR x);
+// union x eps = if ep x then x else (eps OR x);
+union x::zs y::zs = if __C::zs_size new_ptr > 0 then (zone_set new_ptr) else nil
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_union new_ptr (ptr x) (ptr y);
+	end;
+
+plus nil = nil;
+plus x::zs = if __C::zs_size new_ptr > 0 then (zone_set new_ptr) else nil
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_plus new_ptr (ptr x);
+	end;
+
+restrict nil _ _ = nil;
+restrict x::zs dmin dmax = if __C::zs_size new_ptr > 0 then (zone_set new_ptr) else nil
+	when
+		new_ptr = sentry __C::zs_destroy __C::zs_create;
+		__C::zs_restrict new_ptr (ptr x) dmin dmax;
+	end;
+
+size nil = 0;
+size x::zs = __C::zs_size (ptr x);
+
+file_total_duration filename::string = __C::zs_total_duration filename;
+
+
+fprintf_begin fp x::zs = __C::zs_fprintf_begin fp (ptr x);
+fprintf_end fp x::zs = __C::zs_fprintf_end fp (ptr x);
+fprintf_zone fp x::zs = __C::zs_fprintf_zone fp (ptr x);
+
+namespace;
+
+concat x y = zs::concatenate x y;
+
+
+let zs1 = zs::append_na (zs::create) 1 2;
+let zs2 = zs::append_na (zs::create) 2 3;
+let zs3 = zs::restrict zs1 0 ; zs3;

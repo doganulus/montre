@@ -1,0 +1,8 @@
+2 pq
+2 ps 
+2 rs
+1 rq
+1 pq
+1 rq 
+1 pq 
+1 ps

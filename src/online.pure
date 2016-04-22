@@ -1,0 +1,76 @@
+/* 
+Copyright (c) 2016 by Dogan Ulus <doganulus@gmail.com>.
+
+This file is part of the monitoring tool Montre.
+
+The Montre is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+using atom;
+using zoneset;
+using parser;
+using tre;
+using dict;
+using derivatives;
+using system;
+
+evali params = result
+when
+	ast = (encode_bool_expr.parse_offline) (params!"--expr");
+	fip = if member params "--filename" then fopen (params!"--filename") "r" else stdin;
+	fop = if member params "--output" then (fopen (params!"--output") "w") else stdout;
+	result = derive_inc params fip fop ast;
+end;
+
+derive_inc params fip fop regex = catch is_eof (do (output_formatter_online params fop) (stepderive regex 0L 0L))
+    with 
+		stepderive phi last_t last_sym = (last_t, curr_t, (xtt Dphi)):(stepderive (Dphi OR regex) curr_t curr_sym) &
+	    when
+	       	dur, sym = fscanf fip "%d %s";
+	        curr_t = last_t + dur;
+	        curr_sym = if sym == "--" then charset "" else charset sym;
+	        Dphi = derive last_sym curr_sym last_t curr_t phi;
+	        (puts.str) Dphi;
+	        (puts.str) "--";
+	    end;
+	end;
+
+is_eof x = "EOF";
+
+output_formatter_online params fop (last_t, curr_t, result) = case (params!"--output-type") of
+	"begin" = zs::fprintf_begin fop _result last_t curr_t;
+	"end" = zs::fprintf_end fop _result last_t curr_t;
+	"zone" = zs::fprintf_zone fop _result;
+end when
+	_result = if result === nil then (zs::create) else result;
+end;
+
+// let ast = parse "((p&q);!q;q)%(4,5);!p";
+// let params = hdict ["--expr"=>"((p&q);!q;q)%(4,5);!p", "--filename"=>"dataset1/ped.txt"];
+
+let params = hdict [
+	"--expr"=>"(p;q)%(3,4)", 
+	"--filename"=>"dataset1/tacas.txt",
+	"--output"=>"dataset1/out.txt",
+	"--output-type"=>"zone"];
+
+evali params;
+
+// // zs::create_from_file_na_true (opts!"--filename") (charset "p");
+
+// // let rx = parse "(a;a) % (1,2)"; rx;
+// // zs::print $ xtt $ derive 1 4 6 (derive 1 0 4 rx);
+
+// evali params;
+

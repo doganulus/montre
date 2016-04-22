@@ -1,0 +1,98 @@
+/* 
+Copyright (c) 2016 by Dogan Ulus <doganulus@gmail.com>.
+
+This file is part of the monitoring tool Montre.
+
+The Montre is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+using regex;
+using atom;
+using tre;
+using zoneset;
+using system;
+//
+// Most of the parsing job is done by eval command of Pure.
+// Here we simply tokenize symbols and give it to the Pure to evaluate.
+//
+
+prefix  30000 SYM;
+
+
+expand_chars s = regsub subsrule "[[:alpha:]]" 0 s 0 with
+	subsrule (pos, c) = "(Atom (Sym " + (str c) + "))";
+end;
+
+expand_ops s = foldl sub_operator s opsubs when
+	opsubs = [
+		(" LNOT ", "!"),
+		(" LOR ", "||"),
+		(" LAND ", "&&"),
+		(" OR ", "|"),
+		(" AND ", "&"),
+		(" DOT ", ";"),
+		(" STAR ", "*"),
+		(" PLUS ", "+"),
+		(" WITHIN ", "%"),		
+		(" RISE ", "<:"),
+		(" FALL ", ":>"),
+		(str(1000000000000000000), "_")
+		];
+end with
+	sub_operator s (x, y) = regsub (cst x) y 0 s 0;
+end;
+
+parse_offline montre_syntax = (reduce.eval.expand_ops.expand_chars) montre_syntax 
+	with 
+
+	(LNOT) (Atom a) = (Atom (LNOT a));
+	(LAND) (Atom a) (Atom b) = (Atom (a LAND b));
+	(LOR) (Atom a) (Atom b) = (Atom (a LOR b));
+
+	(RISE) (Atom  a) = (AtomL a);
+	(RISE) (AtomL a) = (AtomL a);
+	(RISE) (AtomR a) = (AtomB a);
+	(RISE) (AtomB a) = (AtomB a);
+
+	(FALL) (Atom  a) = (AtomR a);
+	(FALL) (AtomL a) = (AtomB a);
+	(FALL) (AtomR a) = (AtomR a);
+	(FALL) (AtomB a) = (AtomB a);
+
+	end;
+
+encode_bool_expr expression = reduce expression with
+	(Sym c::char) = atom::var c;
+	(LNOT) a::pointer = atom::lnot a;
+	(LAND) a::pointer b::pointer = atom::land a b;
+	(LOR) a::pointer b::pointer = atom::lor a b;
+	end;
+
+
+
+parse_offline "!(<:(b&&c))";
+
+// (encode_bool_expr.parse_offline) "<:p";
+
+// abst a::atom = (atom::aexpr a);
+// abst (phi OR psi) = (abst phi) OR (abst psi);
+// abst (phi AND psi) = (abst phi) AND (abst psi);
+// abst (phi DOT psi) = (abst phi) DOT (abst psi);
+// abst (phi WITHIN (dmin::int64, dmax::int64)) = (abst phi) WITHIN (dmin, dmax); 
+// abst (phi STAR) = (abst phi);
+
+// zs::print (zs::create_from_file_na "dataset1/ped.txt" (parse "p"));
+
+
+// atom::eval (atom::ptr ((encode_bool_expr.parse_offline) "!b")) (charset "");

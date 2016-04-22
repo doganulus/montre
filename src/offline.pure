@@ -1,0 +1,128 @@
+/* 
+Copyright (c) 2016 by Dogan Ulus <doganulus@gmail.com>.
+
+This file is part of the monitoring tool Montre.
+
+The Montre is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+using atom;
+using zoneset;
+using parser;
+using dict;
+using system;
+
+evalb params = output_formatter params (database!ast) 
+when
+	ast = parse_offline (params!"--expr");
+	totaldur = a;
+	database = evalx params ast emptyhdict;
+end with
+
+evalx params phi@(Atom e) db = 
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::create_from_file_na (params!"--filename") (encode_bool_expr e));
+
+evalx params phi@(AtomL e) db = 
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::create_from_file_ba (params!"--filename") (encode_bool_expr e));
+
+evalx params phi@(AtomR e) db = 
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::create_from_file_ea (params!"--filename") (encode_bool_expr e));
+
+evalx params phi@(AtomB e) db = 
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::create_from_file_da (params!"--filename") (encode_bool_expr e));
+
+
+evalx params phi@(f1 DOT f2) db =  
+	if member db phi then 
+		db!phi
+	else if (ep f1) and (not (ep f2)) then
+		update db phi (zs::union (zs::concatenate ((evalx params f1 db)!f1) ((evalx params f2 db)!f2)) ((evalx params f2 db)!f2))
+	else if (ep f2) and (not (ep f1)) then
+		update db phi (zs::union (zs::concatenate ((evalx params f1 db)!f1) ((evalx params f2 db)!f2)) ((evalx params f1 db)!f1))
+	else if (ep f2) and (ep f1) then
+		update db phi (zs::union (zs::concatenate ((evalx params f1 db)!f1) ((evalx params f2 db)!f2)) (zs::union ((evalx params f1 db)!f1) ((evalx params f2 db)!f2)))
+	else 		
+		update db phi (zs::concatenate ((evalx params f1 db)!f1) ((evalx params f2 db)!f2));
+
+evalx params phi@(f1 AND f2) db =  
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::intersect ((evalx params f1 db)!f1) ((evalx params f2 db)!f2));
+
+evalx params phi@(f1 OR f2) db =  
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::union ((evalx params f1 db)!f1) ((evalx params f2 db)!f2));
+
+evalx params phi@(f WITHIN (a, b)) db =  
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::restrict ((evalx params f db)!f) a b);
+
+evalx params phi@(f PLUS) db =  
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::plus ((evalx params f db)!f));
+
+evalx params phi@(f STAR) db =  
+	if member db phi then 
+		db!phi
+	else 
+		update db phi (zs::plus ((evalx params f db)!f));
+end;
+
+output_formatter params result = case (params!"--output-type") of
+	"begin" = zs::fprintf_begin fp result 0 td;
+	"end" = zs::fprintf_end fp result 0 td;
+	"zone" = zs::fprintf_zone fp result;
+end when
+	td = zs::file_total_duration (params!"--filename");
+	fp = if member params "--output" then fopen (params!"--output") "w" else stdout;
+end;
+
+// let ast = parse "((p&q);!q;q)%(4,5);!p";
+// // let params = hdict ["--expr"=>"((p&q);!q;q)%(4,5);!p", "--filename"=>"dataset1/ped.txt"];
+
+// let params = hdict [
+// 	// "--expr"=>"((p&q);!q;q)%(4,5);!p",
+// 	"--expr"=>"p;q",
+// 	"--filename"=>"dataset1/ped.txt", 
+// 	"--output"=>"dataset1/out.txt",
+// 	"--output-type"=>"zone"];
+
+// // (parse_offline (params!"--expr"));
+
+// evalb params;
+
+// atom::print (parse "p");
+
+// let zs1 = zs::create_from_file_na "dataset1/ped.txt" (parse "p");
+// // let zs2 = zs::create_from_file_na_true "dataset1/ped.txt" (charset "q");
+

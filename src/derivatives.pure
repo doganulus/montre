@@ -1,0 +1,125 @@
+/* 
+Copyright (c) 2016 by Dogan Ulus <doganulus@gmail.com>.
+
+This file is part of the monitoring tool Montre.
+
+The Montre is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+using tre;
+using zoneset;
+using dict;
+using parser;
+using system;
+
+nu nil = false;
+nu zset::zs = true;
+nu a::atom = false;
+nu (phi OR psi) = nu phi || nu psi;
+nu (phi AND psi) = nu phi && nu psi;
+nu (phi DOT psi) = nu phi && nu psi;
+nu (phi WITHIN (dmin, dmax)) = nu phi; 
+nu (phi STAR) = true;
+
+using namespace zs;
+
+using namespace;
+
+derive last_sym s b e nil = nil;
+derive last_sym s b e eps = nil;
+derive last_sym s b e zset::zs = nil;
+
+derive last_sym s b e (Atom bool_expr) = 
+    if atom::eval bool_expr s then 
+        triangle DOT ((Atom bool_expr) STAR)
+    else 
+        nil
+    when
+        zset = zs::create;
+        triangle = zs::append_na zset b e;
+    end;
+
+derive last_sym s b e (AtomL bool_expr) = 
+    if ((atom::eval bool_expr s) and (not (atom::eval bool_expr last_sym) or (b == 0))) then 
+        zone DOT ((Atom bool_expr) STAR)
+    else 
+        nil
+    when
+        zset = zs::create;
+        zone = zs::append_ba zset b e;
+    end;
+
+derive last_sym s b e (AtomR bool_expr) = 
+    if atom::eval bool_expr s then 
+        (zs::append_na (zs::create) b e) DOT (AtomR bool_expr)
+    else if atom::eval bool_expr last_sym then
+        zs::append_endmarker (zs::create) b
+    else
+        nil;
+
+derive last_sym s b e (AtomB bool_expr) = 
+    if ((atom::eval bool_expr s) and (not (atom::eval bool_expr last_sym) or (b == 0))) then 
+        (zs::append_ba (zs::create) b e) DOT (AtomR bool_expr)
+    else
+        nil;
+
+derive last_sym s b e (f1 OR f2) = 
+    (derive last_sym s b e f1) OR (derive last_sym s b e f2);
+
+derive last_sym s b e (f1 AND f2) = 
+    (derive last_sym s b e f1) AND (derive last_sym s b e f2);
+
+derive last_sym s b e (f1 DOT f2) = 
+    case (ep key), (nu key) of
+        (0, 0) = (Df1 DOT f2);
+        (1, 0) = (Df1 DOT f2) OR (Df2) when Df2 = derive last_sym s b e f2 end;
+        (0, 1) = (Df1 DOT f2) OR (xtt(key) DOT Df2) when Df2 = derive last_sym s b e f2 end;
+        (1, 1) = (Df1 DOT f2) OR (Df2) OR (xtt(key) DOT Df2) when Df2 = derive last_sym s b e f2 end;
+    end when
+        Df1 = derive last_sym s b e f1;
+        key = f1 OR Df1;
+    end;
+
+derive last_sym s b e (a::atom STAR) = derive last_sym s b e a;
+
+derive last_sym s b e (phi STAR) = ((zs::plus (xtt Dphi)) DOT Dphi DOT (phi STAR)) OR (Dphi DOT (phi STAR))
+    when
+        Dphi = derive last_sym s b e phi;
+    end;
+
+derive last_sym s b e (phi WITHIN (dmin, dmax)) =      
+    ((derive last_sym s b e phi) WITHIN (dmin, dmax));
+
+xtt nil = nil;      // Empty Zone Set
+xtt eps = nil; 
+xtt zset::zs = zset;
+xtt a::atom = nil;  // Empty Zone Set
+xtt (f1 OR f2) = zs::union (xtt f1) (xtt f2);
+xtt (f1 AND f2) = zs::intersect (xtt f1) (xtt f2);
+
+xtt (f1 DOT f2) = case (ep f1), (ep f2) of
+    (0, 0) = zs3;
+    (0, 1) = zs::union zs3 zs1;
+    (1, 0) = zs::union zs3 zs2;
+    (1, 1) = zs::union zs3 (zs::union zs1 zs2);
+end when
+    zs1 = (xtt f1);
+    zs2 = (xtt f2);
+    zs3 = zs::concatenate zs1 zs2;
+end;
+
+xtt (phi WITHIN (dmin, dmax)) = zs::restrict (xtt phi) dmin dmax;
+xtt (phi STAR) = (zs::plus (xtt phi));
+
+concatenate x y = zs::concatenate x y;

@@ -1,0 +1,96 @@
+/* 
+Copyright (c) 2016 by Dogan Ulus <doganulus@gmail.com>.
+
+This file is part of the monitoring tool Montre.
+
+The Montre is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+using atom;
+using zoneset;
+
+// Constants
+nonfix nil;
+nonfix eps;
+
+// Operators of Timed Regular Expressions
+infixl  4000  OR ;
+infixl  4000  AND ;
+infixr  5000  DOT ;
+postfix 8000  STAR;
+postfix 8000  PLUS;
+infix   9000  WITHIN;
+
+// Algebraic Type Definition
+type tre nil;
+type tre eps;
+type tre zset::zs;
+type tre a::atom;
+type tre (phi::tre OR psi::tre); 
+type tre (phi::tre AND psi::tre);
+type tre (phi::tre DOT psi::tre);
+type tre (phi::tre WITHIN (dmin::int, dmax::int));
+type tre (phi::tre STAR);
+type tre (phi::tre PLUS);
+
+is_pure nil = true;
+is_pure eps = true;
+is_pure zset::zs = false;
+is_pure a::atom = true;
+is_pure (f1 OR f2) = (is_pure f1) && (is_pure f2);
+is_pure (f1 AND f2) = (is_pure f1) && (is_pure f2);
+is_pure (f1 DOT f2) = (is_pure f1) && (is_pure f2);
+is_pure (f1 WITHIN (dmin::int, dmax::int)) = is_pure f1;
+is_pure (f1 STAR) = is_pure f1;
+
+ep nil = false;
+ep eps = true;
+ep zset::zs = false;
+ep a::atom = false;
+ep (phi OR psi) = ep phi || ep psi;
+ep (phi AND psi) = ep phi && ep psi;
+ep (phi DOT psi) = ep phi && ep psi;
+ep (phi WITHIN (dmin::int, dmax::int)) = (ep phi) && (dmin == 0);
+ep (phi STAR) = true;
+
+// (STAR) nil = eps;
+(STAR) (phi STAR) = (phi STAR);
+
+// (STAR) phi = (eps OR phi PLUS);
+// (PLUS) nil = nil;
+// (PLUS) (phi PLUS) = (phi PLUS);
+
+(WITHIN) nil (_, _) = nil;
+
+using namespace zs;
+(DOT) zs1::zs zs2::zs = concatenate zs1 zs2;
+(DOT) zs1::zs (zs2::zs DOT x) = (concatenate zs1 zs2) DOT x;
+using namespace;
+
+(DOT) eps phi = phi;
+(DOT) phi eps = phi;
+(DOT) _ nil = nil;
+(DOT) nil _ = nil;
+
+(DOT) (x DOT y) z = x DOT (y DOT z);
+
+(AND) phi phi = phi;
+(AND) phi nil = nil;
+(AND) nil phi = nil;
+(AND) phi eps = eps AND phi;
+
+(OR) phi phi = phi;
+(OR) phi nil = phi;
+(OR) nil phi = phi;
+(OR) phi eps = eps OR phi;

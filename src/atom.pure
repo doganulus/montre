@@ -1,0 +1,97 @@
+/* 
+Copyright (c) 2016 by Dogan Ulus <doganulus@gmail.com>.
+
+This file is part of the monitoring tool Montre.
+
+The Montre is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+using "lib:libmontre";
+
+namespace __C;
+extern bool_expr* bool_expr_create();
+extern void bool_expr_destroy(bool_expr*);
+extern void bool_expr_append(bool_expr*, int64);
+extern void bool_expr_op_or(bool_expr*, bool_expr*, bool_expr*);
+extern void bool_expr_op_and(bool_expr*, bool_expr*, bool_expr*);
+extern void bool_expr_op_not(bool_expr*, bool_expr*);
+extern int64  bool_expr_size(bool_expr*);
+extern void bool_expr_print(bool_expr*);
+
+extern int64  bool_expr_eval(bool_expr*, int64);
+
+extern int64 charset_encode(char*);
+extern int64 charset_subset(int64, int64);
+
+namespace;
+
+prefix  20000 LNOT;
+infixl  15000 LOR;
+infixl  15000 LAND;
+prefix  10000 RISE;
+postfix 10000 FALL;
+
+type atom (Atom  p);
+type atom (AtomL p);
+type atom (AtomR p);
+type atom (AtomB p);
+
+namespace atom;
+
+ptr (Atom  p) = p;
+ptr (AtomL p) = p;
+ptr (AtomR p) = p;
+ptr (AtomB p) = p;
+
+var sym::char = new_ptr
+	when
+		new_ptr = sentry __C::bool_expr_destroy __C::bool_expr_create;
+		encoded_sym = __C::charset_encode sym;
+		__C::bool_expr_append new_ptr encoded_sym;
+	end;
+
+lnot a::pointer = new_ptr
+	when
+		new_ptr = sentry __C::bool_expr_destroy __C::bool_expr_create;
+		__C::bool_expr_op_not new_ptr a;
+	end;
+
+land a::pointer b::pointer = new_ptr
+	when
+		new_ptr = sentry __C::bool_expr_destroy __C::bool_expr_create;
+		__C::bool_expr_op_and new_ptr a b;
+	end;
+
+lor a::pointer b::pointer = new_ptr
+	when
+		new_ptr = sentry __C::bool_expr_destroy __C::bool_expr_create;
+		__C::bool_expr_op_or new_ptr a b;
+	end;
+
+eval a::pointer sym = (__C::bool_expr_eval a sym) == 1;
+
+print a::pointer = a when __C::bool_expr_print a end;
+
+namespace;
+
+charset s::string = __C::charset_encode s;
+
+charset_subset x y = (__C::charset_subset x y) == 1;
+
+const eng_num_alpha = string ("a".."z");
+
+charset_decode sym = (foldl foo ("", sym) eng_num_alpha)!0
+	with
+		foo (s, x) a = if (x mod 2) == 1 then (s + a, x div 2) else (s, x div 2);
+	end;

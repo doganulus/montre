@@ -1,0 +1,131 @@
+/* 
+Copyright (c) 2016 by Dogan Ulus <doganulus@gmail.com>.
+
+This file is part of the monitoring tool Montre.
+
+The Montre is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>. 
+*/
+
+using system;
+using getopt;
+using dict;
+
+using zoneset;
+using offline;
+using online;
+
+
+let montre_opts = [
+            ("--offline", "-b", NOARG),
+            ("--check-syntax", "-c", NOARG),
+			("--expr", "-e", REQARG),
+            ("--filename", "-f", REQARG),
+            ("--online", "-i", NOARG),
+            ("--help", "-h", NOARG),   
+            ("--output", "-o", REQARG),
+            ("--epsilon", "", NOARG), 
+            ("--output-type", "", REQARG),
+            ("--syntax-help", "", NOARG), 
+            ("--version", "", NOARG)
+            ];
+
+let version_info = "Montre v0.3 Copyright (c) 2014-2016 (Evaluation Version)";
+
+let helpme = version_info + "\n\n\
+Usage: montre [OPTIONS ...] PATTERN [FILE]\n\
+\n\
+Options:\n\
+-b, --offline              Offline Mode (Batch)\n\
+-e, --expr=PATTERN         Use PATTERN for matching\n\
+-f, --filename=FILE        Use FILE for matching\n\
+-i, --online               Online Mode (Incremental)\n\
+-h, --help                 Display this information\n\
+-o, --output=FILE          Place the output into FILE (Default: stdout)\n\
+\n\
+    --output-type=TYPE     Supported types are <end|zone>\n\
+    --syntax-help          Display the syntax of timed regular expressions\n\
+    --version              Version Information\n\
+";
+
+let config_error = "Unsupported combination of options. Please run 'montre --help' to see options.";
+
+let syntax_info = "\n\
+Formal Grammar of Timed Regular Expressions in Montre:\n\
+\n\
+Atom = p                   (Propositional Symbol)\n\
+     : !Atom               (Negation)\n\
+     : Atom1 && Atom2      (Conjunction)\n\
+     : Atom1 || Atom2      (Disjunction)\n\
+\n\
+Expr = Atom                (Atomic Expression)\n\
+     : <:Atom              (Begin-anchored)\n\
+     : Atom:>              (End-anchored)\n\
+     : <:Atom:>            (BeginEnd-anchored)\n\
+     : Expr1 ; Expr2       (Concatenation)\n\
+     : Expr1 | Expr2       (Alternation)\n\
+     : Expr1 & Expr2       (Intersection)\n\
+     : Expr1 % (i,j)       (Time Restriction)\n\
+     : Expr1 *             (Zero-or-more Repetition)\n\
+     : Expr1 +             (One-or-more Repetition)\n\
+";
+
+main argv = case config of
+//   b, c, e, f, i, h, e, s, v
+    (_, _, _, _, _, 1, _, _, _) = puts helpme;
+    (_, _, _, _, _, 0, _, _, 1) = puts version_info;
+    (_, _, _, _, _, 0, _, 1, 0) = puts syntax_info;
+    (_, _, 0, _, _, 0, _, 0, 0) = puts helpme;
+    (_, 1, 1, _, _, 0, _, 0, 0) = syntax_check params;
+    (_, 0, 1, _, _, 0, 1, 0, 0) = epsilon_check params;
+    (1, 0, 1, 1, _, 0, 0, 0, 0) = evalb params;
+    (0, 0, 1, _, 1, 0, 0, 0, 0) = evali params;
+    (_, _, _, _, _, _, _, _, _) = puts config_error;
+end when
+    argv_ret = (getopt montre_opts argv);
+    opts_ret = dict (argv_ret!0); 
+    args_ret = list (argv_ret!1); 
+    prgs_ret = if ((#args_ret) > 0) then (tail args_ret) else [];
+    params = make_params opts_ret prgs_ret;
+    config = make_config params;
+end;
+
+make_params opts args = ((pb.pz.pf.pp)(opts, args))!0 
+with
+    pp (opts, args) = if (member opts "--expr") || (#args < 1) then (opts, args) else ((update opts "--expr" (head args)), (tail args));
+    pf (opts, args) = if (member opts "--filename") || (#args < 1) then (opts, args) else ((update opts "--filename" (head args)), (tail args));
+    // po (opts, args) = if (member opts "--filename") then (opts, args) else ((update opts "--filename" ""), args);
+    pz (opts, args) = if (member opts "--output-type") then (opts, args) else ((update opts "--output-type" "zone"), args);
+    pb (opts, args) = if (member opts "--offline") || (member opts "--online") then (opts, args) else ((update opts "--offline" ""), args);
+    cn (opts, args) = if (member opts "--offline") then ((update opts "--total-duration" (zs::file_total_duration (opts!"--filename"))), args) else (opts, args);
+end;
+
+make_config params = (_b, _c, _e, _f, _i, _h, _eps, _syn, _ver)
+when
+    _b   = member params "--offline";
+    _c   = member params "--check-syntax";
+    _e   = member params "--expr";
+    _f   = member params "--filename";
+    _i   = member params "--online";
+    _h   = member params "--help";
+    _eps = member params "--epsilon";
+    _syn = member params "--syntax-help";
+    _ver = member params "--version";
+end;
+
+// make_params2 config opts args = ;
+
+compiling || main argv;
+
+
+
