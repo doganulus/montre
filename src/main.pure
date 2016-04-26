@@ -61,7 +61,7 @@ Options:\n\
 let config_error = "Unsupported combination of options. Please run 'montre --help' to see options.";
 
 let syntax_info = "\n\
-Formal Grammar of Timed Regular Expressions in Montre:\n\
+Formal Syntax of Timed Regular Expressions in Montre:\n\
 \n\
 Atom = p                   (Propositional Symbol)\n\
      : !Atom               (Negation)\n\
@@ -73,7 +73,7 @@ Expr = Atom                (Atomic Expression)\n\
      : Atom:>              (End-anchored)\n\
      : <:Atom:>            (BeginEnd-anchored)\n\
      : Expr1 ; Expr2       (Concatenation)\n\
-     : Expr1 | Expr2       (Alternation)\n\
+     : Expr1 | Expr2       (Union)\n\
      : Expr1 & Expr2       (Intersection)\n\
      : Expr1 % (i,j)       (Time Restriction)\n\
      : Expr1 *             (Zero-or-more Repetition)\n\
