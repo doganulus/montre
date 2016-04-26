@@ -40,29 +40,23 @@
 <h2>
 <a id="get-started" class="anchor" href="#get-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Get Started</h2>
 
-<ol>
-<li>Install Pure 0.64 and dependencies 
-<code>sh
-wget https://bitbucket.org/purelang/pure-lang/downloads/pure-0.64.tar.gz
+<p>First install Pure 0.64 and dependencies. For more details please refer to the original documents:
+<a href="https://bitbucket.org/purelang/pure-lang/wiki/GettingStarted">https://bitbucket.org/purelang/pure-lang/wiki/GettingStarted</a></p>
+
+<div class="highlight highlight-source-shell"><pre>wget https://bitbucket.org/purelang/pure-lang/downloads/pure-0.64.tar.gz
 tar xfvz pure-0.64.tar.gz
-cd pure-0.64
+<span class="pl-c1">cd</span> pure-0.64
 ./configure --enable-release
 make
 make check
-sudo make install
-</code>
-For any problem please refer to the original documents:
-<a href="https://bitbucket.org/purelang/pure-lang/wiki/GettingStarted">https://bitbucket.org/purelang/pure-lang/wiki/GettingStarted</a>
-</li>
-<li>Install Montre
-<code>sh
-git clone https://github.com/doganulus/montre
-cd montre
+sudo make install</pre></div>
+
+<p>Then install Montre as follows:</p>
+
+<div class="highlight highlight-source-shell"><pre>git clone https://github.com/doganulus/montre
+<span class="pl-c1">cd</span> montre
 make
-sudo make install
-</code>
-</li>
-</ol>
+sudo make install</pre></div>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/doganulus">doganulus</a></p>
