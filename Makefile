@@ -1,64 +1,40 @@
-PACKAGE = libmontre
-VERSION = 0.1.0
+PACKAGE = montre
+LIBPACKAGE = libmontre
+VERSION = 0.3.0
 
-CXX      ?= g++ 
+PREFIX = /usr/local
+
+CXX      ?= g++
 CXXFLAGS += -std=c++0x -Iinclude -DVERSION=\"$(VERSION)\" -O3
-LDFLAGS  += 
-prefix   ?= /usr/local
+LDFLAGS  +=
 
-libmontre_hdr    = $(wildcard libmontre/*.h)
-libmontre_src    = $(wildcard libmontre/*.cpp)
+lib_hdr    = $(wildcard src/libmontre/*.h)
+lib_src    = $(wildcard src/libmontre/*.cpp)
 
-dist_files = $(libmontre_hdr) $(libmontre_src)
+dist_files = $(lib_hdr) $(lib_src)
 
-ifeq ($(MSYSTEM), MINGW32)
-  EXEEXT    = .exe  
-  LIBEXT    = .dll
-else
-  EXEEXT    =
-  LIBEXT    = .so  
-endif
+LIBEXT    = .so
 
-.PHONY: all check clean install uninstall dist
+.PHONY: all clean install uninstall
 
-all: $(PACKAGE)$(LIBEXT)
+all: $(PACKAGE)
 
-$(PACKAGE)$(LIBEXT): $(patsubst %.cpp, %.o, $(lib_src))
-	$(CXX) -shared -fPIC $(CXXFLAGS) $(LDFLAGS) $^ $(lib_libs) -Wl,-soname=$(patsubst %$(LIBEXT),lib%.a, $@) -o $@
+$(PACKAGE): $(patsubst %.cpp, %.o, $(lib_src))
+	$(CXX) -shared -fPIC $(CXXFLAGS) $(LDFLAGS) $^ $(lib_libs) -o $(LIBPACKAGE)$(LIBEXT)
+	pure -c src/main.pure -o $(PACKAGE)
 
-check: test-$(PACKAGE)$(EXEEXT)	
-	./test-$(PACKAGE)$(EXEEXT)
+clean:
+	rm -f src/libmontre/*.o src/libmontre/*.d $(PACKAGE) $(LIBPACKAGE)$(LIBEXT)
 
-test-$(PACKAGE)$(EXEEXT): $(PACKAGE)$(LIBEXT) $(patsubst %.cpp, %.o, $(test_src))
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(test_libs) -o $@
-
-clean: 
-	rm -f src/*.o src/*.d test/*.o test/*.d $(PACKAGE)$(LIBEXT) test-$(PACKAGE)$(EXEEXT)	
-
-dist:
-	mkdir $(PACKAGE)-$(VERSION)
-	cp --parents $(dist_files) $(PACKAGE)-$(VERSION)
-	tar -czvf $(PACKAGE)-$(VERSION).tar.gz $(PACKAGE)-$(VERSION)
-	rm -rf $(PACKAGE)-$(VERSION)
-
-install: $(PACKAGE)$(LIBEXT)
-	mkdir -p $(prefix)/include/$(PACKAGE)
-	cp $(headers) $(prefix)/include/$(PACKAGE)
+install: $(PACKAGE)
 	mkdir -p $(prefix)/lib
-	cp lib$(PACKAGE).a $(prefix)/lib
+	cp $(LIBPACKAGE)$(LIBEXT) $(PREFIX)/lib
 	mkdir -p $(prefix)/bin
-	cp $(PACKAGE)$(LIBEXT) $(prefix)/bin
+	cp $(PACKAGE) $(PREFIX)/bin
 
 uninstall:
-	rm -r $(prefix)/include/$(PACKAGE)
-	rm $(prefix)/lib/lib$(PACKAGE).a
-	rm $(prefix)/bin/$(PACKAGE)$(LIBEXT)
+	rm $(PREFIX)/lib/$(LIBPACKAGE)$(LIBEXT)
+	rm $(PREFIX)/bin/$(PACKAGE)
 
 %.o : %.cpp
-	$(CXX) -fPIC $(CXXFLAGS) -MD -c $< -o $(patsubst %.cpp, %.o, $<)	
-
-ifneq "$(MAKECMDGOALS)" "clean"
-deps  = $(patsubst %.cpp, %.d, $(lib_src))
-deps += $(patsubst %.cpp, %.d, $(test_src))
--include $(deps)
-endif
+	$(CXX) -fPIC $(CXXFLAGS) -MD -c $< -o $(patsubst %.cpp, %.o, $<)
