@@ -71,9 +71,13 @@ If you have problems with permissions don't forget to prefix with `sudo`
   ```
 
   It will install Montre with the default prefix /usr/local. You can modify Makefile if you would like to install to a custom location.
+  
+## Tutorial
 
-# Documentation
+We have used Montre to find all sprints performed by a player in a real soccer match. See the tutorial [Finding Sprints](https://github.com/doganulus/montre/blob/master/demo/finding-sprints.ipynb).
 
-  * Timed Pattern Matching.
-  * Online Timed Pattern Matching using Derivatives.
-  * Montre: A Tool for Monitoring Timed Regular Expressions.
+## Documentation
+
+  * Timed Pattern Matching. Dogan Ulus, Thomas Ferrere, Eugene Asarin and Oded Maler.
+  * Online Timed Pattern Matching using Derivatives. Dogan Ulus, Thomas Ferrere, Eugene Asarin and Oded Maler.
+  * Montre: A Tool for Monitoring Timed Regular Expressions. Dogan Ulus.
