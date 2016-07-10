@@ -67,6 +67,7 @@ If you have problems with permissions don't forget to prefix with `sudo`
 2. Build and install Montre:
 
   ```sh
+  export LD_LIBRARY_PATH=./src/libmontre/
   make && make install
   ```
 
