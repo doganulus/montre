@@ -52,6 +52,7 @@ Ubuntu LTS 14.04 64-bit is the recommended platform.
   	* The GNU multiprecision floating point library.
   	* LLVM (3.5 or less. It is known that LLVM 3.6+ is incompatible.)
   	* More info: https://bitbucket.org/purelang/pure-lang/wiki/GettingStarted
+  * pkg-config
 
 ## Instructions
 
@@ -67,7 +68,6 @@ If you have problems with permissions don't forget to prefix with `sudo`
 2. Build and install Montre:
 
   ```sh
-  export LD_LIBRARY_PATH=./src/libmontre/
   make && make install
   ```
 
