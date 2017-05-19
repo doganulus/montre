@@ -75,7 +75,7 @@ If you have problems with permissions don't forget to prefix with `sudo`
   
 ## Tutorial
 
-We have used Montre to find all sprints performed by a player in a real soccer match. See the tutorial [Finding Sprints](https://github.com/doganulus/montre/blob/master/demo/finding-sprints.ipynb).
+We have used Montre to find all sprints performed by a player in a real soccer match. See the tutorial [Finding Sprints](https://github.com/doganulus/montre/blob/master/demo/sprints.ipynb).
 
 ## Documentation
 
