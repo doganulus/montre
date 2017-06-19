@@ -70,6 +70,7 @@ extern "C" void zs_from_file_ba(zone_set&, const char*, const bool_expr&);
 extern "C" void zs_from_file_ea(zone_set&, const char*, const bool_expr&);
 extern "C" void zs_from_file_da(zone_set&, const char*, const bool_expr&);
 
+extern "C" int64_t* zs_get_zone(zone_set &zs, int64_t i);
 
 // extern "C" void zs_from_file(zone_set &_retvalue, const char * filename, const int64_t sym_wanted);
 // extern "C" void zs_from_file_b2i(zone_set &_retvalue, const char* filename, const int64_t sym_wanted, const bool polarity);

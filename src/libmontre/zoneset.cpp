@@ -397,7 +397,7 @@ void zs_plus(zone_set &_retvalue, zone_set &zs){
 }
 
 void zs_append(zone_set &_retvalue, int64_t bmin, int64_t bmax, int64_t emin, int64_t emax, int64_t dmin, int64_t dmax){
-    zone z = { { 2, -bmin, -emin, bmax, 1, -dmin, emax, dmax, 2 } };
+    zone z = { { 2, bmin, emin, bmax, 1, dmin, emax, dmax, 2 }};
     if(zn_normalize(z)){
         _retvalue.push_back(z);
     }
@@ -690,6 +690,24 @@ void zs_fprintf_zone(FILE *stream, zone_set &zs){
     }
 }
 
+
+int64_t* zs_get_zone(zone_set &zs, int64_t i){
+
+    // int64_t _retvalue[6];
+
+    // _retvalue[0] = -zn_value_bound(zs[i][1]); 
+    // _retvalue[1] = zn_value_bound(zs[i][3]);
+    // _retvalue[2] = -zn_value_bound(zs[i][2]); 
+    // _retvalue[3] = zn_value_bound(zs[i][6]);
+    // _retvalue[4] = -zn_value_bound(zs[i][5]);
+    // _retvalue[5] = zn_value_bound(zs[i][7]);
+
+    // std::cout <<_retvalue[0]<<' '<< _retvalue[1] <<' '<<
+    //             _retvalue[2]<<' '<< _retvalue[3] <<' '<<
+    //             _retvalue[4]<<' '<< _retvalue[5] << std::endl;
+
+    return zs[i].data();
+}
 
 //void zs_from_file_na_false(zone_set &_retvalue, const char* filename, const char_set sym_wanted){
 //    zs_from_file(_retvalue, filename, sym_wanted, false, zs_append_not_anchored);
