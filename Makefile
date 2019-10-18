@@ -42,6 +42,7 @@ install: $(PACKAGE)
 	cp $(LIBPACKAGE)$(LIBEXT) $(PREFIX)/lib
 	mkdir -p $(PREFIX)/bin
 	cp $(PACKAGE) $(PREFIX)/bin
+	export LD_LIBRARY_PATH=/usr/local/lib:$(LD_LIBRARY_PATH)
 
 uninstall:
 	rm $(PREFIX)/lib/$(LIBPACKAGE)$(LIBEXT)
