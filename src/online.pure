@@ -41,8 +41,6 @@ derive_inc params fip fop regex = catch is_eof (do (output_formatter_online para
 	        curr_t = last_t + dur;
 	        curr_sym = if sym == "--" then charset "" else charset sym;
 	        Dphi = derive last_sym curr_sym last_t curr_t phi;
-	        (puts.str) Dphi;
-	        (puts.str) "--";
 	    end;
 	end;
 
