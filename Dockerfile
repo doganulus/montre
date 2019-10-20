@@ -20,4 +20,5 @@ WORKDIR montre
 # make file expects to create a dir named montre
 RUN mv montre pymontre
 RUN make && make install
+RUN ldconfig
 WORKDIR ..
