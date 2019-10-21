@@ -75,7 +75,7 @@ If you have problems with permissions don't forget to prefix with `sudo`
 
 ## Running Montre in Docker
 
-Docker provides an easier way for people that want to run Montre without needing to install all dependencies. If Docker is not installed on your machine, you can install using [these instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/#extra-steps-for-aufs). Note that you may need `sudo` for `docker` commands below.
+Docker provides an alternative (and easier) way for people that want to run Montre without needing to install all dependencies. If Docker is not installed on your machine, you can install using [these instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/#extra-steps-for-aufs). Note that you may need `sudo` for `docker` commands below. Many thanks to [@mibarg](https://github.com/mibarg) for preparing the `Dockerfile`.
 
 1. Pull the Montre docker image.
   ```sh
