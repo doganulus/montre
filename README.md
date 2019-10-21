@@ -42,7 +42,7 @@ Expr = Atom                (Atomic Expression)
 ```
 # Installation
 
-Ubuntu LTS 14.04 64-bit is the recommended platform.
+Ubuntu LTS 14.04 64-bit is the recommended platform. 
 
 ## Requirements
 
@@ -72,13 +72,34 @@ If you have problems with permissions don't forget to prefix with `sudo`
   ```
 
   It will install Montre with the default prefix /usr/local. You can modify Makefile if you would like to install to a custom location.
+
+## Running Montre in Docker
+
+Docker provides an easier way for people that want to run Montre without needing to install all dependencies. If Docker is not installed on your machine, you can install using [these instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/#extra-steps-for-aufs). Note that you may need `sudo` for `docker` commands below.
+
+1. Pull the Montre docker image.
+  ```sh
+  docker pull doganulus/montre:latest
+  ```
+
+2. Start a command prompt inside the container.
+  ```sh
+  docker run -it doganulus/montre:latest /bin/bash
+  ```
+
+3. Do some timed pattern matching using `montre`!
+  ```sh
+  montre '(p;q)%(3,4)' montre/examples/my_sym_beh.txt
+  ```
   
-## Tutorial
+# Tutorial
 
 We have used Montre to find all sprints performed by a player in a real soccer match. See the tutorial [Finding Sprints](https://github.com/doganulus/montre/blob/master/demo/sprints.ipynb).
 
-## Documentation
+# Documentation
 
-  * Timed Pattern Matching. Dogan Ulus, Thomas Ferrere, Eugene Asarin and Oded Maler.
-  * Online Timed Pattern Matching using Derivatives. Dogan Ulus, Thomas Ferrere, Eugene Asarin and Oded Maler.
-  * Montre: A Tool for Monitoring Timed Regular Expressions. Dogan Ulus.
+  * Timed Pattern Matching. Dogan Ulus, Thomas Ferrere, Eugene Asarin and Oded Maler. FORMATS'14.
+  * Online Timed Pattern Matching using Derivatives. Dogan Ulus, Thomas Ferrere, Eugene Asarin and Oded Maler. TACAS'16.
+  * Montre: A Tool for Monitoring Timed Regular Expressions. Dogan Ulus. CAV'17.
+  * Pattern Matching with Time: Theory and Applications. Dogan Ulus. PhD Thesis. 2018.
+
